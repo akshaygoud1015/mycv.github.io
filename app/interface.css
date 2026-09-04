@@ -1,0 +1,650 @@
+/* ============================================================
+   PERSISTENT CHROME — backdrop canvases, boot, bar, rail,
+   cursor, scroll meter, command palette
+   ============================================================ */
+
+.gl {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.neural {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0;
+  animation: fadein 1.6s var(--ease) 0.25s forwards;
+}
+
+html[data-booted='true'] .neural {
+  animation-delay: 0.1s;
+}
+
+@keyframes fadein {
+  to {
+    opacity: 1;
+  }
+}
+
+/* ============================================================
+   BOOT
+   ============================================================ */
+
+.boot {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  background: var(--void);
+  display: grid;
+  place-items: center;
+  transition: opacity 0.62s var(--ease), filter 0.62s var(--ease);
+}
+
+/* Returning within the same session: never paint the overlay at all. */
+html[data-bootskip='1'] .boot {
+  display: none;
+}
+
+.boot-out {
+  opacity: 0;
+  filter: blur(10px);
+  pointer-events: none;
+}
+
+.boot-inner {
+  width: min(30rem, 82vw);
+}
+
+.boot-log {
+  font-size: 0.8125rem;
+  display: grid;
+  gap: 0.45rem;
+  margin-bottom: 2rem;
+}
+
+.boot-log li {
+  display: grid;
+  grid-template-columns: 1rem 1fr auto;
+  gap: 0.6rem;
+  align-items: baseline;
+  color: var(--faint);
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 0.32s var(--ease), transform 0.32s var(--ease);
+}
+
+.boot-log li[data-on='true'] {
+  opacity: 1;
+  transform: none;
+}
+
+.boot-caret {
+  color: var(--dim);
+}
+
+.boot-text {
+  color: var(--muted);
+  letter-spacing: 0.02em;
+}
+
+.boot-tag {
+  font-size: 0.6875rem;
+  letter-spacing: 0.14em;
+}
+.boot-tag-ok {
+  color: var(--ion);
+}
+.boot-tag-sys {
+  color: var(--dim);
+}
+
+.boot-meter {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+}
+
+.boot-bar {
+  flex: 1;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.09);
+  position: relative;
+  overflow: hidden;
+}
+
+.boot-bar i {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, var(--violet), var(--ion));
+  transform-origin: left;
+  transform: scaleX(0);
+  transition: transform 0.14s linear;
+  box-shadow: 0 0 12px rgba(95, 231, 200, 0.55);
+}
+
+.boot-pct {
+  font-size: 0.75rem;
+  color: var(--ion);
+  letter-spacing: 0.08em;
+  min-width: 3.4em;
+  text-align: right;
+}
+
+.boot-hint {
+  margin-top: 1.15rem;
+  font-size: 0.625rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+
+/* ============================================================
+   SCROLL METER
+   ============================================================ */
+
+.meter {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  z-index: 120;
+  pointer-events: none;
+}
+
+.meter i {
+  display: block;
+  height: 100%;
+  transform-origin: left;
+  background: linear-gradient(90deg, var(--violet), var(--ion));
+  box-shadow: 0 0 10px rgba(95, 231, 200, 0.5);
+}
+
+/* ============================================================
+   TOP BAR
+   ============================================================ */
+
+.bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 110;
+  background: linear-gradient(180deg, rgba(5, 5, 8, 0.86), rgba(5, 5, 8, 0.4) 70%, transparent);
+  backdrop-filter: blur(14px) saturate(120%);
+  -webkit-backdrop-filter: blur(14px) saturate(120%);
+}
+
+.bar-in {
+  max-width: var(--maxw);
+  margin-inline: auto;
+  padding: 0.85rem var(--gutter);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.mark {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.mark-glyph {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--ion);
+  border: 1px solid var(--edge-2);
+  background: rgba(95, 231, 200, 0.05);
+  border-radius: 3px;
+  transition: border-color 0.3s, background 0.3s, box-shadow 0.3s;
+}
+
+.mark:hover .mark-glyph {
+  border-color: rgba(95, 231, 200, 0.5);
+  background: rgba(95, 231, 200, 0.1);
+  box-shadow: 0 0 20px rgba(95, 231, 200, 0.18);
+}
+
+.mark-meta {
+  display: none;
+  flex-direction: column;
+  line-height: 1.25;
+  text-align: left;
+}
+
+.mark-meta b {
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: var(--text);
+}
+
+.mark-meta em {
+  font-style: normal;
+  font-size: 0.625rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+@media (min-width: 640px) {
+  .mark-meta {
+    display: flex;
+  }
+}
+
+.bar-right {
+  display: flex;
+  align-items: center;
+  gap: clamp(0.6rem, 2vw, 1.5rem);
+}
+
+.bar-clock {
+  display: none;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.6875rem;
+  letter-spacing: 0.1em;
+  color: var(--faint);
+  font-variant-numeric: tabular-nums;
+}
+
+@media (min-width: 900px) {
+  .bar-clock {
+    display: flex;
+  }
+}
+
+.live {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--ion);
+  box-shadow: 0 0 8px var(--ion);
+  animation: blip 2.4s ease-in-out infinite;
+  flex: none;
+}
+
+@keyframes blip {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.25; }
+}
+
+.bar-link {
+  font-size: 0.6875rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
+  transition: color 0.25s;
+  position: relative;
+  /* padding, not margin — this has to be a real touch target */
+  padding-block: 0.55rem;
+}
+
+.bar-link::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0.35rem;
+  height: 1px;
+  background: var(--ion);
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform 0.4s var(--ease);
+}
+
+.bar-link:hover {
+  color: var(--text);
+}
+.bar-link:hover::after {
+  transform: scaleX(1);
+  transform-origin: left;
+}
+
+.kbtn {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.6875rem;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  border: 1px solid var(--edge);
+  background: rgba(255, 255, 255, 0.025);
+  padding: 0.55rem 0.6rem 0.55rem 0.8rem;
+  border-radius: 4px;
+  transition: border-color 0.25s, color 0.25s, background 0.25s;
+}
+
+.kbtn span {
+  display: none;
+}
+
+@media (min-width: 560px) {
+  .kbtn span {
+    display: inline;
+  }
+}
+
+.kbtn:hover {
+  border-color: rgba(95, 231, 200, 0.4);
+  color: var(--text);
+  background: rgba(95, 231, 200, 0.06);
+}
+
+kbd {
+  font-family: var(--font-mono), monospace;
+  font-size: 0.625rem;
+  line-height: 1;
+  padding: 0.25em 0.4em;
+  border: 1px solid var(--edge-2);
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--muted);
+}
+
+/* ============================================================
+   SECTION RAIL
+   ============================================================ */
+
+.rail {
+  position: fixed;
+  right: clamp(0.9rem, 2vw, 1.6rem);
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 105;
+  display: none;
+}
+
+@media (min-width: 1140px) {
+  .rail {
+    display: block;
+  }
+}
+
+.rail ul {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.rail button {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  padding: 0.34rem 0;
+  width: 100%;
+  color: var(--dim);
+  transition: color 0.35s var(--ease);
+}
+
+.rail-i {
+  font-size: 0.625rem;
+  letter-spacing: 0.1em;
+  opacity: 0;
+  transform: translateX(6px);
+  transition: opacity 0.35s var(--ease), transform 0.35s var(--ease);
+}
+
+.rail-tick {
+  display: block;
+  width: 14px;
+  height: 1px;
+  background: currentColor;
+  transition: width 0.4s var(--ease), background 0.35s;
+  flex: none;
+}
+
+.rail-name {
+  font-size: 0.625rem;
+  letter-spacing: 0.18em;
+  width: 3.9rem;
+  text-align: left;
+  opacity: 0;
+  transform: translateX(-6px);
+  transition: opacity 0.35s var(--ease), transform 0.35s var(--ease);
+}
+
+.rail button:hover {
+  color: var(--muted);
+}
+.rail button:hover .rail-name,
+.rail button:hover .rail-i {
+  opacity: 1;
+  transform: none;
+}
+
+.rail button[data-on='true'] {
+  color: var(--ion);
+}
+.rail button[data-on='true'] .rail-tick {
+  width: 26px;
+  box-shadow: 0 0 10px rgba(95, 231, 200, 0.6);
+}
+.rail button[data-on='true'] .rail-name,
+.rail button[data-on='true'] .rail-i {
+  opacity: 1;
+  transform: none;
+}
+
+.sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* ============================================================
+   TRAILING CURSOR RING
+   ============================================================ */
+
+.cursor {
+  position: fixed;
+  inset: 0;
+  z-index: 400;
+  pointer-events: none;
+}
+
+.cursor-ring {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 30px;
+  height: 30px;
+  margin: -15px 0 0 -15px;
+  border: 1px solid rgba(95, 231, 200, 0.35);
+  border-radius: 50%;
+  transition: width 0.3s var(--ease), height 0.3s var(--ease),
+    margin 0.3s var(--ease), border-color 0.3s, background 0.3s;
+}
+
+.cursor-ring[data-on='true'] {
+  width: 46px;
+  height: 46px;
+  margin: -23px 0 0 -23px;
+  border-color: rgba(95, 231, 200, 0.75);
+  background: rgba(95, 231, 200, 0.06);
+}
+
+.cursor-ring[data-press='true'] {
+  width: 20px;
+  height: 20px;
+  margin: -10px 0 0 -10px;
+  border-color: var(--ion);
+}
+
+/* ============================================================
+   COMMAND PALETTE
+   ============================================================ */
+
+.cmdk {
+  position: fixed;
+  inset: 0;
+  z-index: 250;
+  display: grid;
+  align-items: start;
+  justify-items: center;
+  padding: clamp(3rem, 14vh, 9rem) 1rem 2rem;
+}
+
+/* The blur is an enhancement; the alpha alone must carry the separation,
+   because backdrop-filter composites unpredictably over a WebGL canvas. */
+.cmdk-scrim {
+  position: absolute;
+  inset: 0;
+  background: rgba(3, 3, 6, 0.86);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  animation: fadein 0.22s ease forwards;
+}
+
+.cmdk-panel {
+  position: relative;
+  width: min(37rem, 100%);
+  background: rgba(11, 11, 18, 0.94);
+  border: 1px solid var(--edge-2);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.5),
+    0 32px 90px rgba(0, 0, 0, 0.7),
+    0 0 60px rgba(124, 108, 247, 0.09);
+  animation: cmdk-in 0.28s var(--ease) forwards;
+}
+
+@keyframes cmdk-in {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.cmdk-field {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.95rem 1rem;
+  border-bottom: 1px solid var(--edge);
+}
+
+.cmdk-prompt {
+  color: var(--ion);
+  font-size: 0.95rem;
+}
+
+.cmdk-field input {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  color: var(--text);
+  font-size: 0.9375rem;
+  font-family: inherit;
+  letter-spacing: -0.005em;
+}
+
+.cmdk-field input::placeholder {
+  color: var(--dim);
+}
+
+.cmdk-list {
+  max-height: min(23rem, 50vh);
+  overflow-y: auto;
+  padding: 0.4rem;
+}
+
+.cmdk-group {
+  padding: 0.75rem 0.7rem 0.35rem;
+  font-size: 0.625rem;
+}
+
+.cmdk-item {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  width: 100%;
+  text-align: left;
+  padding: 0.55rem 0.7rem;
+  border-radius: 5px;
+  color: var(--muted);
+  transition: background 0.14s, color 0.14s;
+  border-left: 2px solid transparent;
+}
+
+.cmdk-item[data-sel='true'] {
+  background: rgba(95, 231, 200, 0.07);
+  color: var(--text);
+  border-left-color: var(--ion);
+}
+
+.cmdk-item-label {
+  font-size: 0.875rem;
+}
+
+.cmdk-item-hint {
+  font-size: 0.6875rem;
+  color: var(--dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 45%;
+}
+
+.cmdk-item[data-sel='true'] .cmdk-item-hint {
+  color: var(--faint);
+}
+
+.cmdk-empty {
+  padding: 1.6rem 0.8rem;
+  font-size: 0.8125rem;
+  color: var(--dim);
+  text-align: center;
+}
+
+.cmdk-foot {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.6rem 1rem;
+  border-top: 1px solid var(--edge);
+  font-size: 0.625rem;
+  color: var(--dim);
+  background: rgba(255, 255, 255, 0.015);
+  flex-wrap: wrap;
+}
+
+.cmdk-foot kbd {
+  margin-right: 0.2rem;
+  font-size: 0.5625rem;
+}
+
+.cmdk-foot-end {
+  margin-left: auto;
+}
+
+.cmdk-flash {
+  color: var(--ion);
+  letter-spacing: 0.06em;
+}
